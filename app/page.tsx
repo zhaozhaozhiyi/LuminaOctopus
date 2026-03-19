@@ -278,12 +278,13 @@ export default function Home() {
   const canResume = Boolean(selectedJobId) && (state?.status === 'paused' || state?.status === 'stopped') && state.resumeAvailable;
   const canStop = state?.status === 'running' || state?.status === 'paused';
   const canExport = Boolean(selectedJobId) && (state?.filesDownloaded ?? 0) > 0 && state?.status !== 'running';
+  const canSkip = Boolean(selectedJobId) && (state?.status === 'running' || state?.status === 'paused');
 
   return (
     <main className="shell">
       <section className="hero">
         <div>
-          <p className="eyebrow">Lumina Octopus</p>
+          <p className="eyebrow">拾光章鱼 / LuminaOctopus</p>
           <h1>完整整站镜像工作台</h1>
           <p className="subtitle">
             以浏览器渲染快照为核心，镜像公开站点的页面与资源，并把输出稳定落盘到本地目录。
@@ -532,6 +533,7 @@ export default function Home() {
                       <th>URL / 本地路径</th>
                       <th>进度</th>
                       <th>层级</th>
+                      <th>操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -553,6 +555,32 @@ export default function Home() {
                         </td>
                         <td>{item.progress}%</td>
                         <td>{item.level}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-skip"
+                            disabled={!canSkip || item.status !== 'queued'}
+                            onClick={async () => {
+                              if (!selectedJobId) return;
+                              setError(null);
+                              try {
+                                const res = await readJson<{ state: CrawlState }>(
+                                  await fetch('/api/crawl/skip', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ jobId: selectedJobId, url: item.url }),
+                                  }),
+                                );
+                                setState(res.state);
+                                await loadLogs(selectedJobId);
+                              } catch (nextError) {
+                                setError(nextError instanceof Error ? nextError.message : 'Failed to skip item');
+                              }
+                            }}
+                          >
+                            Skip
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

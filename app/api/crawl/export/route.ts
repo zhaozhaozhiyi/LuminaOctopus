@@ -1,39 +1,57 @@
-import { NextResponse } from 'next/server';
-import { getEngine } from '@/lib/crawler-store';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { Readable, PassThrough } from 'node:stream';
+import { NextRequest, NextResponse } from 'next/server';
+import { getJobManager } from '@/lib/crawler-store';
 import archiver from 'archiver';
 
-export async function GET() {
-  const engine = getEngine();
-  if (!engine) {
-    return NextResponse.json({ error: '暂无抓取结果' }, { status: 400 });
+function isSafeJobId(jobId: string): boolean {
+  // Prevent path traversal and weird filesystem paths.
+  if (!jobId) return false;
+  if (jobId.includes('..') || jobId.includes('/') || jobId.includes('\\')) return false;
+  return jobId.length <= 120;
+}
+
+export async function GET(req: NextRequest) {
+  const jobId = req.nextUrl.searchParams.get('jobId');
+  if (!jobId || !isSafeJobId(jobId)) {
+    return NextResponse.json({ error: 'Missing or invalid jobId' }, { status: 400 });
   }
-  const files = engine.getDownloaded();
-  if (files.size === 0) {
-    return NextResponse.json({ error: '没有可导出的文件' }, { status: 400 });
+
+  const jobManager = getJobManager();
+  const paths = jobManager.getPaths(jobId);
+
+  try {
+    const stat = await fs.stat(paths.siteRoot);
+    if (!stat.isDirectory()) {
+      return NextResponse.json({ error: 'No exported site directory found' }, { status: 400 });
+    }
+  } catch {
+    return NextResponse.json({ error: 'No exported site directory found' }, { status: 400 });
   }
 
   const archive = archiver('zip', { zlib: { level: 9 } });
-  const buffers: Buffer[] = [];
-  archive.on('data', (chunk: Buffer) => buffers.push(chunk));
-
-  await new Promise<void>((resolve, reject) => {
-    archive.on('end', () => resolve());
-    archive.on('error', (err) => reject(err));
-    Array.from(files.entries()).forEach(([path, { body }]) => {
-      const buf = typeof body === 'string' ? Buffer.from(body, 'utf8') : body;
-      archive.append(buf, { name: path });
-    });
-    archive.finalize();
+  const pass = new PassThrough();
+  archive.on('warning', (err) => {
+    console.warn('zip warning', err);
+  });
+  archive.on('error', (err) => {
+    console.error('zip error', err);
+    pass.destroy(err);
   });
 
-  const zipBuffer = Buffer.concat(buffers);
-  const filename = `lumina-octopus-crawl-${Date.now()}.zip`;
+  archive.pipe(pass);
+  archive.directory(paths.siteRoot, false);
+  void archive.finalize();
 
-  return new NextResponse(zipBuffer, {
+  const zipStream = Readable.toWeb(pass) as unknown as ReadableStream;
+  const safeName = `lumina-octopus-${jobId}-${Date.now()}.zip`;
+  const filename = path.basename(safeName);
+
+  return new NextResponse(zipStream, {
     headers: {
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename="${filename}"`,
-      'Content-Length': String(zipBuffer.length),
     },
   });
 }

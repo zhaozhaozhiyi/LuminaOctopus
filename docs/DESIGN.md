@@ -1,6 +1,6 @@
 # Lumina Octopus 功能点与详细设计
 
-基于参考产品（SiteSucker Pro）界面与交互，整理功能点并给出详细设计，便于 Web 版实现与后续 Electron 封装。
+基于参考产品（SiteSucker Pro）界面与交互，整理功能点并给出详细设计，便于 Web 版实现与后续 Tauri 2 桌面端封装（Windows + macOS）。
 
 ---
 
@@ -54,7 +54,7 @@
 | 编号 | 功能点 | 描述 | 优先级 | 当前状态 |
 |------|--------|------|--------|----------|
 | F16 | 抓取设置 | 最大层级、并发数、请求间隔、同源开关、User-Agent 等 | P1 | ⬜ 部分在 API，UI 未暴露 |
-| F17 | 保存路径（Electron） | 选择下载文件保存目录 | P1 | ⬜ 仅 Electron 版 |
+| F17 | 保存路径（桌面端） | 选择下载文件保存目录 | P1 | ⬜ 仅桌面端 |
 | F18 | 文件类型过滤 | 仅抓取 HTML / 包含图片与 CSS / 全部资源 | P2 | ⬜ 待实现 |
 
 ### 2.5 日志与调试（对齐参考图 Log）
@@ -68,7 +68,7 @@
 
 | 编号 | 功能点 | 描述 | 优先级 | 当前状态 |
 |------|--------|------|--------|----------|
-| F21 | 打开结果目录（Electron） | 在系统文件管理器中打开保存目录 | P1 | ⬜ 仅 Electron 版 |
+| F21 | 打开结果目录（桌面端） | 在系统文件管理器中打开保存目录 | P1 | ⬜ 仅桌面端 |
 | F22 | 导出为 Zip（Web） | 将已抓取文件打包为 zip 供下载 | P1 | ⬜ 待实现 |
 | F23 | 预览已抓取页面 | 在应用内或新窗口打开本地 HTML 预览 | P2 | ⬜ 待实现 |
 
@@ -99,7 +99,7 @@ Lumina Octopus
 │   └── 历史任务列表，点击恢复参数或结果
 ├── 日志（Tab 或独立视图）
 │   └── 时间线日志列表
-└── 导出/打开（Web：下载 Zip；Electron：选目录 + 打开文件夹）
+└── 导出/打开（Web：下载 Zip；桌面端：选目录 + 打开文件夹）
 ```
 
 ### 3.2 页面布局与区域
@@ -180,7 +180,7 @@ Lumina Octopus
 - **去重**：使用 `normalizeUrl` 后的 URL 进 Set，已存在则不再入队。  
 - **层级**：仅对 `text/html` 响应继续解析并入队，且 `level < maxLevel`。  
 - **并发与礼貌**：`maxConcurrent` 控制并发数，`delayMs` 控制请求间隔。  
-- **存储**：当前为内存 Map（path → { contentType, body }）；Electron 版可改为写入用户选择目录，Web 版可在此基础上生成 Zip。
+- **存储**：当前为内存 Map（path → { contentType, body }）；桌面端可改为写入用户选择目录，Web 版可在此基础上生成 Zip。
 
 ### 3.7 前端组件拆分建议（便于后续扩展）
 
@@ -193,11 +193,14 @@ Lumina Octopus
 
 状态通过现有 `/api/crawl/status` 轮询或后续 WebSocket 推送即可，无需大改。
 
-### 3.8 Electron 差异（简要）
+### 3.8 Tauri 2 桌面端差异（简要）
 
-- **主进程**：复用 `lib/crawler` 的 `CrawlEngine`，通过 IPC 暴露 start/stop/pause/resume/status；保存路径由 `dialog.showOpenDialog` 获取，用 `fs` 写文件。  
-- **渲染进程**：同一套 React 页面，将 `fetch('/api/crawl/...')` 改为 `window.electronAPI.invoke('crawl-start', opts)` 等。  
-- **仅 Electron 的能力**：选择保存目录、在 Finder/资源管理器中打开结果目录、可选系统托盘与离线运行。
+- **壳（Rust）**：Tauri 2，负责窗口、系统对话框、文件系统访问、进程管理等原生能力。  
+- **前端（WebView）**：复用现有 Next.js/React UI。桌面端建议以“静态资源加载”为主，避免在桌面里运行 Next server。  
+- **爬虫运行方式（默认先落地 Node sidecar）**：  
+  - Tauri 启动并管理一个本地 **Node sidecar 进程**来运行 `lib/crawler`，前端通过本地桥接（IPC/HTTP）获取状态与日志、下发 start/stop/pause/resume/skip 等命令。  
+  - 后续如需进一步缩小体积与简化部署，可把爬虫核心逐步迁移到 Rust。  
+- **仅桌面端能力**：选择保存目录、打开结果目录（Finder/资源管理器）、直接落盘写文件（不做自动更新）。
 
 ---
 
@@ -212,7 +215,7 @@ Lumina Octopus
 3. **Phase 3**  
    - 日志视图切换（F20）、文件类型过滤（F18）、robots.txt（F25）、请求头/Cookie（F24）。
 
-4. **Electron 封装**  
-   - 在主进程接入 CrawlEngine、保存路径与打开文件夹（F17、F21），其余 UI 与 Web 共用。
+4. **桌面端封装（Tauri 2）**  
+   - 在 Tauri 端接入本地引擎（先 sidecar，后可 Rust 化）、保存路径与打开文件夹（F17、F21），其余 UI 与 Web 共用。
 
 以上功能点与详细设计可直接用于迭代开发与任务拆分；实现时以 `lib/crawler` 与现有 API 为基础扩展即可。

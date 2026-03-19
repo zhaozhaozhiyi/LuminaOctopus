@@ -9,19 +9,39 @@ import { JobManager } from './crawler/job-manager';
 import { appendLog, getJobPaths, writeJobState, writeOutputFile } from './crawler/job-store';
 import type { JobPaths } from './crawler/job-store';
 
-let engine: CrawlEngine | null = null;
-let lastState: CrawlState | null = null;
-let jobManager: JobManager | null = null;
-let currentJobPaths: JobPaths | null = null;
-let writtenOutputPaths: Set<string> = new Set();
-let lastJobStateWriteAt = 0;
-let persistChain: Promise<void> = Promise.resolve();
-let jobGeneration = 0;
+type GlobalCrawlerStore = {
+  engine: CrawlEngine | null;
+  lastState: CrawlState | null;
+  jobManager: JobManager | null;
+  currentJobPaths: JobPaths | null;
+  writtenOutputPaths: Set<string>;
+  lastJobStateWriteAt: number;
+  persistChain: Promise<void>;
+  jobGeneration: number;
+};
+
+function getGlobalStore(): GlobalCrawlerStore {
+  const globalAny = globalThis as any;
+  if (!globalAny.__luminaCrawlerStore) {
+    globalAny.__luminaCrawlerStore = {
+      engine: null,
+      lastState: null,
+      jobManager: null,
+      currentJobPaths: null,
+      writtenOutputPaths: new Set<string>(),
+      lastJobStateWriteAt: 0,
+      persistChain: Promise.resolve(),
+      jobGeneration: 0,
+    } satisfies GlobalCrawlerStore;
+  }
+  return globalAny.__luminaCrawlerStore as GlobalCrawlerStore;
+}
 
 // 注意：notify 不建议作为全局函数使用（会受 job 切换影响）。
 
 export function getCrawlerState(): CrawlState | null {
-  return lastState ?? engine?.getState() ?? null;
+  const store = getGlobalStore();
+  return store.lastState ?? store.engine?.getState() ?? null;
 }
 
 function isHtmlContentType(contentType: string | undefined): boolean {
@@ -37,6 +57,7 @@ async function persistStateAndOutputs(params: {
   state: CrawlState;
 }): Promise<void> {
   const { engineInstance, jobPaths, writtenSet, state } = params;
+  const store = getGlobalStore();
   // 写入新下载到的文件（按已写盘去重）
   const downloaded = engineInstance.getDownloaded();
   for (const [localPath, { contentType, body, url }] of Array.from(downloaded.entries())) {
@@ -66,9 +87,9 @@ async function persistStateAndOutputs(params: {
   // 写入任务状态（节流 + 关键状态强制落盘）
   const now = Date.now();
   const shouldForce = state.status === 'done' || state.status === 'error' || state.status === 'stopped' || state.status === 'paused';
-  const shouldWrite = lastJobStateWriteAt === 0 || shouldForce || now - lastJobStateWriteAt > 1000;
+  const shouldWrite = store.lastJobStateWriteAt === 0 || shouldForce || now - store.lastJobStateWriteAt > 1000;
   if (!shouldWrite) return;
-  lastJobStateWriteAt = now;
+  store.lastJobStateWriteAt = now;
   await writeJobState(jobPaths, state);
 }
 
@@ -79,62 +100,64 @@ function schedulePersist(params: {
   writtenSet: Set<string>;
   state: CrawlState;
 }): Promise<void> {
+  const store = getGlobalStore();
   // 串行化磁盘写入，避免频繁状态轮询导致并发写盘冲突
-  persistChain = persistChain
+  store.persistChain = store.persistChain
     .then(() => {
-      if (params.generation !== jobGeneration) return;
+      if (params.generation !== store.jobGeneration) return;
       return persistStateAndOutputs(params);
     })
     .catch((e) => {
       console.error('Failed to persist crawl job state/logs/outputs', e);
     });
-  return persistChain;
+  return store.persistChain;
 }
 
 export function createOrGetEngine(options: CrawlOptions): CrawlEngine {
-  if (engine) {
-    engine.stop();
-    engine = null;
+  const store = getGlobalStore();
+  if (store.engine) {
+    store.engine.stop();
+    store.engine = null;
   }
-  currentJobPaths = null;
-  writtenOutputPaths = new Set();
-  lastJobStateWriteAt = 0;
-  jobGeneration += 1;
-  persistChain = Promise.resolve();
+  store.currentJobPaths = null;
+  store.writtenOutputPaths = new Set();
+  store.lastJobStateWriteAt = 0;
+  store.jobGeneration += 1;
+  store.persistChain = Promise.resolve();
 
   const outputRoot = options.outputRoot ?? 'jobs';
   const jobId = options.jobId ?? 'local';
   const jobPaths = getJobPaths(jobId, outputRoot);
-  currentJobPaths = jobPaths;
+  store.currentJobPaths = jobPaths;
 
   const writtenSet = new Set<string>();
-  writtenOutputPaths = writtenSet;
+  store.writtenOutputPaths = writtenSet;
 
-  const generation = jobGeneration;
+  const generation = store.jobGeneration;
   const localEngine = new CrawlEngine(options, (state) => {
-    lastState = state;
+    store.lastState = state;
     void schedulePersist({ generation, engineInstance: localEngine, jobPaths, writtenSet, state });
   });
 
-  engine = localEngine;
-  lastState = localEngine.getState();
+  store.engine = localEngine;
+  store.lastState = localEngine.getState();
   return localEngine;
 }
 
 export function getEngine(): CrawlEngine | null {
-  return engine;
+  return getGlobalStore().engine;
 }
 
 export function stopCrawler(): void {
-  engine?.stop();
+  getGlobalStore().engine?.stop();
 }
 
 export function pauseCrawler(): void {
-  engine?.pause();
+  getGlobalStore().engine?.pause();
 }
 
 export function resumeCrawler(): void {
-  engine?.resume();
+  getGlobalStore().engine?.resume();
 }
 
 /**
@@ -142,6 +165,7 @@ export function resumeCrawler(): void {
  * Keep it as a singleton so polling routes share recovery state.
  */
 export function getJobManager(): JobManager {
-  if (!jobManager) jobManager = new JobManager();
-  return jobManager;
+  const store = getGlobalStore();
+  if (!store.jobManager) store.jobManager = new JobManager();
+  return store.jobManager;
 }

@@ -78,7 +78,7 @@ English: Make important web content easy to save, revisit, and use offline—any
 ### 5.3 一句话电梯介绍（两种口径）
 
 - **产品口径**：拾光章鱼把网站抓取为可离线浏览的整站镜像，并提供可暂停恢复、历史回看与导出。  
-- **技术口径**：基于 Next.js 的 Web 版整站镜像工具，爬虫核心为纯 Node 引擎，便于后续 Electron 主进程复用。
+- **技术口径**：基于 Next.js 的 Web 版整站镜像工具，爬虫核心为纯 Node 引擎，便于后续 Tauri 2 桌面端复用（先以 sidecar 进程承载，后续可逐步 Rust 化）。
 
 ## 6. 命名体系（产品内名 / 模块名）
 
@@ -160,5 +160,5 @@ English: Make important web content easy to save, revisit, and use offline—any
 
 - **G1 可用离线镜像**：品牌承诺“离线可浏览的站点快照”。  
 - **G2 可控与可恢复**：品牌强调 jobs、暂停/恢复、历史与导出可靠。  
-- **G3 可演进**：品牌叙事支持 Web → Electron 的自然迁移，爬虫引擎与 UI 解耦可复用。
+- **G3 可演进**：品牌叙事支持 Web → 桌面端（Tauri 2）的自然迁移，爬虫引擎与 UI 解耦可复用。
 

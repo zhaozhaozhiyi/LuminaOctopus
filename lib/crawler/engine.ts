@@ -6,7 +6,7 @@
 import type { CrawlItem, CrawlState, CrawlOptions } from './types';
 import { BrowserRenderer } from './browser';
 import { rewriteCssText, rewriteHtmlDocument } from './rewriter';
-import { getLocalPathForUrl, isSameOrigin } from './url-utils';
+import { getLocalPathForUrl, isSameOrigin, normalizeUrl } from './url-utils';
 
 const DEFAULT_OPTIONS: Partial<CrawlOptions> = {
   maxDepth: 2,
@@ -36,6 +36,7 @@ export class CrawlEngine {
   >;
   private state: CrawlState;
   private seen = new Set<string>();
+  private skipped = new Set<string>();
   private queue: Array<{ url: string; level: number; kind: CrawlItem['kind'] }> = [];
   private active = 0;
   private abortController: AbortController | null = null;
@@ -128,6 +129,7 @@ export class CrawlEngine {
     if (this.state.status === 'running') return;
     this.abortController = new AbortController();
     this.seen.clear();
+    this.skipped.clear();
     this.queue = [];
     this.downloaded.clear();
     const baseUrl = this.state.baseUrl;
@@ -193,6 +195,37 @@ export class CrawlEngine {
     }
   }
 
+  /**
+   * Skip a URL: remove it from pending queue, mark queued items as skipped,
+   * and prevent the same URL from being re-enqueued in the future.
+   */
+  skip(url: string): { removedFromQueue: number; markedInItems: number } {
+    const key = this.urlDedupeKey(url);
+    this.skipped.add(key);
+
+    const before = this.queue.length;
+    this.queue = this.queue.filter((entry) => this.urlDedupeKey(entry.url) !== key);
+    const removedFromQueue = before - this.queue.length;
+
+    let markedInItems = 0;
+    for (const item of this.state.items) {
+      if (this.urlDedupeKey(item.url) !== key) continue;
+      if (item.status === 'queued') {
+        item.status = 'skipped';
+        item.progress = 100;
+        item.updatedAt = Date.now();
+        markedInItems += 1;
+      }
+    }
+
+    this.state.filesRemaining = this.queue.length + this.active;
+    this.state.resumeAvailable =
+      this.state.status === 'paused' || this.state.status === 'stopped' ? this.state.filesRemaining > 0 : false;
+    this.emit();
+
+    return { removedFromQueue, markedInItems };
+  }
+
   private async processQueue(): Promise<void> {
     while (
       (this.state.status === 'running' || this.state.status === 'paused') &&
@@ -247,6 +280,15 @@ export class CrawlEngine {
     try {
       await new Promise((r) => setTimeout(r, this.options.delayMs));
 
+      const dedupeKey = this.urlDedupeKey(url);
+      if (this.skipped.has(dedupeKey)) {
+        item.status = 'skipped';
+        item.progress = 100;
+        item.updatedAt = Date.now();
+        this.emit();
+        return;
+      }
+
       if (kind === 'page') {
         // 对 HTML：先浏览器渲染（跑 JS），再离线重写 HTML/CSS 入口链接。
         const renderResult = await this.getBrowserRenderer().renderPage(url);
@@ -292,6 +334,7 @@ export class CrawlEngine {
           for (const ref of rewritten.pageRefs) {
             if (this.options.sameSitePagesOnly && !isSameOrigin(ref.absoluteUrl, this.state.baseUrl)) continue;
             const key = this.urlDedupeKey(ref.absoluteUrl);
+            if (this.skipped.has(key)) continue;
             if (this.seen.has(key)) continue;
             this.seen.add(key);
             this.queue.push({ url: ref.absoluteUrl, level: level + 1, kind: 'page' });
@@ -301,6 +344,7 @@ export class CrawlEngine {
         for (const ref of rewritten.assetRefs) {
           if (this.options.sameSitePagesOnly && !isSameOrigin(ref.absoluteUrl, this.state.baseUrl)) continue;
           const key = this.urlDedupeKey(ref.absoluteUrl);
+          if (this.skipped.has(key)) continue;
           if (this.seen.has(key)) continue;
           this.seen.add(key);
           this.queue.push({ url: ref.absoluteUrl, level: level + 1, kind: 'asset' });
@@ -347,6 +391,7 @@ export class CrawlEngine {
           for (const ref of rewrittenCss.assetRefs) {
             if (this.options.sameSitePagesOnly && !isSameOrigin(ref.absoluteUrl, this.state.baseUrl)) continue;
             const key = this.urlDedupeKey(ref.absoluteUrl);
+            if (this.skipped.has(key)) continue;
             if (this.seen.has(key)) continue;
             this.seen.add(key);
             this.queue.push({ url: ref.absoluteUrl, level: level + 1, kind: 'asset' });

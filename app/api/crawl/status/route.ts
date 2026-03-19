@@ -1,32 +1,39 @@
-import { NextResponse } from 'next/server';
-import { getCrawlerState } from '@/lib/crawler-store';
+import { NextRequest, NextResponse } from 'next/server';
+import { getCrawlerState, getJobManager } from '@/lib/crawler-store';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const jobId = req.nextUrl.searchParams.get('jobId');
+  if (jobId) {
+    const state = await getJobManager().getJobState(jobId);
+    if (!state) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+    return NextResponse.json(state);
+  }
+
   const state = getCrawlerState();
-  return (
-    NextResponse.json(
-      state ?? {
-        status: 'idle',
-        jobId: '',
-        outputPath: '',
-        renderMode: 'browser',
-        baseUrl: '',
-        maxDepth: 0,
-        maxConcurrent: 0,
-        sameSitePagesOnly: true,
-        delayMs: 0,
-        respectRobots: true,
-        filesDownloaded: 0,
-        filesRemaining: 0,
-        pagesDiscovered: 0,
-        assetsDownloaded: 0,
-        degradedPages: 0,
-        errors: 0,
-        warnings: [],
-        items: [],
-        lastUpdatedAt: Date.now(),
-        resumeAvailable: false,
-      },
-    )
+  return NextResponse.json(
+    state ?? {
+      status: 'idle',
+      jobId: '',
+      outputPath: '',
+      renderMode: 'browser',
+      baseUrl: '',
+      maxDepth: 0,
+      maxConcurrent: 0,
+      sameSitePagesOnly: true,
+      delayMs: 0,
+      respectRobots: true,
+      filesDownloaded: 0,
+      filesRemaining: 0,
+      pagesDiscovered: 0,
+      assetsDownloaded: 0,
+      degradedPages: 0,
+      errors: 0,
+      warnings: [],
+      items: [],
+      lastUpdatedAt: Date.now(),
+      resumeAvailable: false,
+    },
   );
 }
