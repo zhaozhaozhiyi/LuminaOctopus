@@ -15,6 +15,7 @@ build
 *.pem
 .env
 .env*.local
+jobs/
 
 # debug
 npm-debug.log*
