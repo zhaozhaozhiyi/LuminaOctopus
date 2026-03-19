@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+import { pauseCrawler, getEngine } from '@/lib/crawler-store';
+
+export async function POST() {
+  pauseCrawler();
+  const engine = getEngine();
+  return NextResponse.json(
+    engine?.getState() ?? {
+      status: 'paused',
+      jobId: '',
+      outputPath: '',
+      renderMode: 'browser',
+      baseUrl: '',
+      maxDepth: 0,
+      maxConcurrent: 0,
+      sameSitePagesOnly: true,
+      delayMs: 0,
+      respectRobots: true,
+      filesDownloaded: 0,
+      filesRemaining: 0,
+      pagesDiscovered: 0,
+      assetsDownloaded: 0,
+      degradedPages: 0,
+      errors: 0,
+      warnings: [],
+      items: [],
+      lastUpdatedAt: Date.now(),
+      resumeAvailable: false,
+    },
+  );
+}

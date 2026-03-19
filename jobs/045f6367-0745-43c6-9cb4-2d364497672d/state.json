@@ -1,0 +1,221 @@
+{
+  "status": "stopped",
+  "jobId": "045f6367-0745-43c6-9cb4-2d364497672d",
+  "outputPath": "/Users/zhaoxiaogang/项目/luminaoctopus/jobs/045f6367-0745-43c6-9cb4-2d364497672d/site",
+  "renderMode": "browser",
+  "baseUrl": "https://jimeng.jianying.com/",
+  "maxDepth": 4,
+  "maxConcurrent": 3,
+  "sameSitePagesOnly": true,
+  "delayMs": 200,
+  "respectRobots": true,
+  "filesDownloaded": 14,
+  "filesRemaining": 5,
+  "pagesDiscovered": 14,
+  "assetsDownloaded": 0,
+  "degradedPages": 0,
+  "errors": 0,
+  "items": [
+    {
+      "key": "0:https://jimeng.jianying.com/",
+      "url": "https://jimeng.jianying.com/",
+      "progress": 100,
+      "level": 0,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848762393,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "index.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/image/generate",
+      "url": "https://jimeng.jianying.com/ai-tool/image/generate",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848763249,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/image/generate.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home",
+      "url": "https://jimeng.jianying.com/ai-tool/home",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848763481,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/explore",
+      "url": "https://jimeng.jianying.com/ai-tool/explore",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848763703,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/explore.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/visionary",
+      "url": "https://jimeng.jianying.com/visionary",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848764052,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "visionary.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7383941417011285286&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7383941417011285286&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848764452,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7353206216786595109&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7353206216786595109&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848764696,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7382120899144731913&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7382120899144731913&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848765065,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7376269586641046819&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7376269586641046819&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848765397,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7384327666322722100&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7384327666322722100&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848765677,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7387327513451564298&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7387327513451564298&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848766262,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7387769101030051108&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7387769101030051108&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848766397,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7389129537776373007&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7389129537776373007&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848766627,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7324213975539879220&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7324213975539879220&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848767192,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7355848479995989298&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7355848479995989298&workDetailType=Image&itemType=9",
+      "progress": 100,
+      "level": 1,
+      "kind": "page",
+      "status": "done",
+      "updatedAt": 1773848767435,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "1:https://jimeng.jianying.com/ai-tool/home?detailId=7392826731456990500&workDetailType=Image&itemType=9",
+      "url": "https://jimeng.jianying.com/ai-tool/home?detailId=7392826731456990500&workDetailType=Image&itemType=9",
+      "progress": 0,
+      "level": 1,
+      "kind": "asset",
+      "status": "downloading",
+      "updatedAt": 1773848767090,
+      "contentType": "text/html; charset=UTF-8",
+      "localPath": "ai-tool/home.html"
+    },
+    {
+      "key": "2:https://jimeng.jianying.com/ai-tool/image/preload-fonts.txt",
+      "url": "https://jimeng.jianying.com/ai-tool/image/preload-fonts.txt",
+      "progress": 0,
+      "level": 2,
+      "kind": "asset",
+      "status": "queued",
+      "updatedAt": 1773848767286
+    },
+    {
+      "key": "2:https://jimeng.jianying.com/ai-tool/preload-fonts.txt",
+      "url": "https://jimeng.jianying.com/ai-tool/preload-fonts.txt",
+      "progress": 0,
+      "level": 2,
+      "kind": "asset",
+      "status": "queued",
+      "updatedAt": 1773848767659
+    }
+  ],
+  "warnings": [
+    "Recovered after a process restart. Resume the job to continue."
+  ],
+  "lastUpdatedAt": 1773848767435,
+  "startedAt": 1773848761721,
+  "resumeAvailable": false,
+  "stoppedAt": 1773848777588
+}
